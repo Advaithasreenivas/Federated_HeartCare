@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Federated HeartCare</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <h1>🫀 Federated HeartCare</h1>
+    <p class="subtitle">Patient Health Prediction System</p>
+
+    <div class="card">
+        <h2>Patient Details</h2>
+
+        <input id="age" type="number" placeholder="Age">
+        <input id="chol" type="number" placeholder="Cholesterol">
+        <input id="bp" type="number" placeholder="Blood Pressure">
+
+        <select id="sex">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+
+        <button onclick="predict()">Predict</button>
+    </div>
+
+    <div class="results">
+        <div class="metric">
+            <h3>Heart Rate</h3>
+            <span id="hr">--</span> bpm
+        </div>
+
+        <div class="metric">
+            <h3>Risk Score</h3>
+            <span id="risk">--</span>
+        </div>
+    </div>
+
+    <canvas id="healthChart"></canvas>
+</div>
+
+<script>
+let chart;
+
+function predict() {
+    fetch("/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            age: document.getElementById("age").value,
+            chol: document.getElementById("chol").value,
+            bp: document.getElementById("bp").value,
+            sex: document.getElementById("sex").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("hr").innerText = data.heart_rate;
+        document.getElementById("risk").innerText = data.risk_score;
+
+        const values = [
+            data.features.age,
+            data.features.chol / 10,
+            data.features.bp / 10
+        ];
+
+        const ctx = document.getElementById("healthChart");
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Age", "Cholesterol", "Blood Pressure"],
+                datasets: [{
+                    label: "Health Indicators",
+                    data: values,
+                    backgroundColor: ["#3498db", "#e67e22", "#2ecc71"]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    });
+}
+</script>
+</body>
+</html>
+
+
+
+
